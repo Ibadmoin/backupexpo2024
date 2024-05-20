@@ -1,0 +1,83 @@
+ '
+ 'Button1
+ '
+ Me.Button1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+     Or System.Windows.Forms.AnchorStyles.Left) _
+     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+ Me.Button1.BackColor = System.Drawing.SystemColors.ControlLightLight
+ Me.Button1.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+ Me.Button1.ForeColor = System.Drawing.SystemColors.Highlight
+ Me.Button1.Location = New System.Drawing.Point(823, 950)
+ Me.Button1.Name = "Button1"
+ Me.Button1.Size = New System.Drawing.Size(212, 66)
+ Me.Button1.TabIndex = 2
+ Me.Button1.Text = "START"
+ Me.Button1.UseVisualStyleBackColor = False
+
+ '
+ 'Button2 (Repeat button)
+ '
+ Me.Button2.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+     Or System.Windows.Forms.AnchorStyles.Left) _
+     Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+ Me.Button2.BackColor = System.Drawing.SystemColors.ControlLightLight
+ Me.Button2.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+ Me.Button2.ForeColor = System.Drawing.SystemColors.Highlight
+ Me.Button2.Location = New System.Drawing.Point(1055, 950) ' Adjust the location as needed
+ Me.Button2.Name = "Button2"
+ Me.Button2.Size = New System.Drawing.Size(212, 66)
+ Me.Button2.TabIndex = 4
+ Me.Button2.Text = "REPEAT"
+ Me.Button2.UseVisualStyleBackColor = False
+
+
+
+
+
+    Private Sub Button2_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button2.Click
+        AxWindowsMediaPlayer1.Ctlcontrols.play()
+    End Sub
+
+
+
+client size = 1904, 1041
+mediaplayersize = 1920, 900
+
+
+
+Me.AxWindowsMediaPlayer1.Enabled = True
+Me.AxWindowsMediaPlayer1.Location = New System.Drawing.Point(-4, 44)
+Me.AxWindowsMediaPlayer1.Name = "AxWindowsMediaPlayer1"
+Me.AxWindowsMediaPlayer1.OcxState = CType(resources.GetObject("AxWindowsMediaPlayer1.OcxState"), System.Windows.Forms.AxHost.State)
+Me.AxWindowsMediaPlayer1.Size = New System.Drawing.Size(1920, 900)
+Me.AxWindowsMediaPlayer1.TabIndex = 3
+
+
+
+-----------------------
+Form6
+Public Class Form6
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        AxWindowsMediaPlayer1.Ctlcontrols.stop()
+
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub AxWindowsMediaPlayer1_Enter(sender As Object, e As EventArgs) Handles AxWindowsMediaPlayer1.Enter
+        AxWindowsMediaPlayer1.URL = "C:\Users\DD\Desktop\videos\5.mp4"
+        AxWindowsMediaPlayer1.Ctlcontrols.play()
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        AxWindowsMediaPlayer1.Ctlcontrols.stop()
+        Me.Hide()
+        Dim form7 As New Form7()
+        form7.Show()
+    End Sub
+
+    Private Sub Form6_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+End Class

@@ -1,0 +1,678 @@
+#include <Wire.h>
+#include "MAX30102_PulseOximeter.h"
+
+#define REPORTING_PERIOD_MS 1000
+
+PulseOximeter pox;
+uint32_t tsLastReport = 0;
+
+void setup() {
+    Serial.begin(9600);
+    Serial.print("Initializing..");
+    delay(100);
+
+    // Initialize the PulseOximeter instance
+    if (!pox.begin()) {
+        Serial.println("FAILED");
+        
+    } else {
+        Serial.println("SUCCESS");
+    }
+
+    // Set the IR LED current
+    pox.setIRLedCurrent(MAX30102_LED_CURR_7_6MA);
+}
+
+void loop() {
+    // Update the PulseOximeter instance
+    pox.update();
+
+    // Dump heart rate and SpO2 readings to the serial monitor
+    Serial.print(pox.getHeartRate());
+    Serial.print(",");
+    Serial.println(pox.getSpO2());
+
+    delay(REPORTING_PERIOD_MS); // Wait for the reporting period
+}
+------------------------
+form 9 temperature
+Imports System.IO.Ports
+
+Public Class Form9
+    Private ReadOnly readings As New List(Of Double)
+    Private Const TotalReadings As Integer = 5 ' Number of readings to consider for the moving average
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        Try
+            Using serialPort As New SerialPort("COM1") ' Replace "COM1" with your serial port name
+                serialPort.Open()
+
+                For i As Integer = 1 To TotalReadings
+                    Dim temperature As String = serialPort.ReadLine()
+                    Dim tempValue As Double
+
+                    If Double.TryParse(temperature, tempValue) Then
+                        readings.Add(tempValue)
+
+                        If readings.Count > TotalReadings Then
+                            readings.RemoveAt(0)
+                        End If
+
+                        Dim averageTemperature As Double = readings.Average()
+                        TextBox1.Text = averageTemperature.ToString("F2") & " F"
+                        Form14.temperaturedata = averageTemperature.ToString("F2")
+                    Else
+                        TextBox1.AppendText("Invalid temperature reading: " & temperature & Environment.NewLine)
+                    End If
+                Next
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Error reading data from SerialPort: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+
+        Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Form9_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        WindowState = FormWindowState.Maximized
+    End Sub
+
+    Private Sub Form9_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If SerialPort8.IsOpen Then
+            SerialPort8.Close()
+        End If
+        Application.Exit()
+    End Sub
+
+    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
+
+    End Sub
+End Class
+-------------------------------------------------
+FORM 7 WEIGHT
+
+
+Imports System.IO.Ports
+
+Public Class Form7
+    Private readings As New List(Of Double)
+
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        Try
+            If Not SerialPort4.IsOpen Then
+                SerialPort4.Open()
+            End If
+
+            Dim totalReadings As Integer = 5 ' Number of readings to consider for the moving average
+
+            ' Read new weight readings and calculate moving average
+            For i As Integer = 1 To totalReadings
+                Dim weight As String = SerialPort4.ReadLine()
+
+                ' Convert weight to a numeric value (assuming it's a number)
+                Dim weightValue As Double
+                If Double.TryParse(weight, weightValue) Then
+                    readings.Add(weightValue)
+
+                    ' Limit the number of readings to the last 5
+                    If readings.Count > totalReadings Then
+                        readings.RemoveAt(0)
+                    End If
+
+                    ' Calculate the moving average
+                    Dim averageWeight As Double = readings.Average()
+
+                    TextBox1.Text = averageWeight.ToString("F2") & " Kg"
+                    Form14.weightdata = averageWeight.ToString("F2")
+                Else
+                    ' Handle the case when the weight reading is not a valid number
+                    TextBox1.AppendText("Invalid weight reading: " & weight & Environment.NewLine)
+                End If
+            Next
+        Catch ex As Exception
+            MessageBox.Show("Error reading data from SerialPort: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            ' Close the serial port in the finally block
+            If SerialPort4.IsOpen Then
+                SerialPort4.Close()
+            End If
+        End Try
+
+        Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Form7_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+
+    Private Sub Form7_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If SerialPort4.IsOpen Then
+            SerialPort4.Close()
+        End If
+        Application.Exit()
+    End Sub
+
+    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
+
+    End Sub
+End Class
+===========================================================
+FORM 11 SPO2
+Imports System.IO.Ports
+
+Public Class Form11
+    Private HeartRateReadings As New List(Of Integer)
+    Private Spo2Readings As New List(Of Integer)
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        Const numberOfReadings As Integer = 5
+        Dim heartRateSum As Integer = 0
+        Dim spo2Sum As Integer = 0
+
+        For i As Integer = 1 To numberOfReadings
+            Try
+                If Not SerialPort5.IsOpen Then
+                    SerialPort5.Open()
+                End If
+
+                ' Read the data from the SerialPort
+                Dim data As String = SerialPort5.ReadLine().Trim()
+
+                ' Assuming data is in the format "heartRate,spo2" (e.g., "80,90")
+                Dim readings As String() = data.Split(","c)
+
+                ' Parse the heart rate and spo2 values
+                If readings.Length = 2 Then
+                    Dim heartRateValue As Integer
+                    Dim spo2Value As Integer
+
+                    If Integer.TryParse(readings(0), heartRateValue) AndAlso Integer.TryParse(readings(1), spo2Value) Then
+                        ' Update the TextBox controls on the form
+                        Me.Invoke(Sub()
+                                      TextBox1.AppendText(heartRateValue & " bpm ")
+                                      TextBox2.AppendText(spo2Value & "% ")
+                                  End Sub)
+
+                        ' Calculate the sum of heart rate and spo2 values for moving average
+                        heartRateSum += heartRateValue
+                        spo2Sum += spo2Value
+                    End If
+                End If
+            Catch ex As Exception
+                MessageBox.Show("Error reading data from SerialPort: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Finally
+                ' Add a delay between readings to avoid overwhelming the serial port
+                System.Threading.Thread.Sleep(100) ' Adjust the delay as needed
+
+                ' Close the serial port if open
+                If SerialPort5.IsOpen Then
+                    SerialPort5.Close()
+                End If
+            End Try
+        Next
+
+        ' Calculate the moving average for heart rate and spo2
+        Dim heartRateAverage As Integer = If(numberOfReadings > 0, heartRateSum / numberOfReadings, 0)
+        Dim spo2Average As Integer = If(numberOfReadings > 0, spo2Sum / numberOfReadings, 0)
+
+        ' Display the moving average results
+        Me.Invoke(Sub()
+                      TextBox1.AppendText("Heart Rate Avg: " & heartRateAverage & " bpm" & Environment.NewLine)
+                      TextBox2.AppendText("SPO2 Avg: " & spo2Average & "%" & Environment.NewLine)
+
+                      Form14.heartratedata = heartRateAverage.ToString()
+                      Form14.SPO2data = spo2Average.ToString()
+                  End Sub)
+
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Form11_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+
+    Private Sub Form11_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        ' Close the serial port if open
+        If SerialPort5.IsOpen Then
+            SerialPort5.Close()
+        End If
+        Application.Exit()
+    End Sub
+End Class
+=======================================
+Form7 weight
+==========================================
+Imports System.IO.Ports
+
+Public Class Form7
+    Private readings As New List(Of Double)
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        Try
+            If Not SerialPort4.IsOpen Then
+                SerialPort4.Open()
+            End If
+
+            Dim totalReadings As Integer = 5 ' Number of readings to consider for the moving average
+
+            ' Read new weight readings and calculate moving average
+            For i As Integer = 1 To totalReadings
+                Dim weight As String = SerialPort4.ReadLine()
+
+                ' Convert weight to a numeric value (assuming it's a number)
+                Dim weightValue As Double
+                If Double.TryParse(weight, weightValue) Then
+                    readings.Add(weightValue)
+
+                    ' Limit the number of readings to the last 5
+                    If readings.Count > totalReadings Then
+                        readings.RemoveAt(0)
+                    End If
+
+                    ' Calculate the moving average
+                    Dim averageWeight As Double = readings.Average()
+
+                    TextBox1.Text = averageWeight & "Kg"
+                    Form14.weightdata = averageWeight.ToString("F2")
+                Else
+                    ' Handle the case when the weight reading is not a valid number
+                    TextBox1.AppendText("Invalid weight reading: " & weight & Environment.NewLine)
+                End If
+            Next
+        Catch ex As Exception
+            ' Handle any exceptions that might occur during reading
+            MessageBox.Show("An error occurred while reading values from the serial port: " & ex.Message)
+        Finally
+            ' Ensure that the serial port is closed after reading values
+            If SerialPort4.IsOpen Then
+                SerialPort4.Close()
+            End If
+        End Try
+
+        ' Navigate to the next form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        ' Navigate to the previous form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Form7_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        ' Maximize the form on load
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+
+    Private Sub Form7_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        ' Ensure that the serial port is closed when the form is closing
+        If SerialPort4.IsOpen Then
+            SerialPort4.Close()
+        End If
+    End Sub
+
+    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
+        ' This event handler is not utilized in the provided code snippet
+    End Sub
+End Class
+===============================================
+form 5 height
+================================================
+Imports System.IO.Ports
+
+Public Class Form5
+    Private readings As New List(Of Double)
+
+    Private Sub Form5_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        Try
+            If Not SerialPort7.IsOpen Then
+                SerialPort7.Open()
+            End If
+
+            Dim totalReadings As Integer = 5 ' Number of readings to consider for the moving average
+
+            ' Read new height readings and calculate moving average
+            For i As Integer = 1 To totalReadings
+                Dim height As String = SerialPort7.ReadLine()
+
+                ' Convert height to a numeric value (assuming it's a number)
+                Dim heightValue As Double
+                If Double.TryParse(height, heightValue) Then
+                    readings.Add(heightValue)
+
+                    ' Limit the number of readings to the last 5
+                    If readings.Count > totalReadings Then
+                        readings.RemoveAt(0)
+                    End If
+
+                    ' Calculate the moving average
+                    Dim averageHeight As Double = readings.Average()
+
+                    TextBox1.Text = averageHeight.ToString("F2") & " Ft"
+                    Form14.heightdata = averageHeight.ToString("F2")
+                Else
+                    ' Handle the case when the height reading is not a valid number
+                    TextBox1.AppendText("Invalid height reading: " & height & Environment.NewLine)
+                End If
+            Next
+        Catch ex As Exception
+            ' Handle any exceptions that might occur during reading
+            MessageBox.Show("An error occurred while reading values from the serial port: " & ex.Message)
+        Finally
+            ' Ensure that the serial port is closed after reading values
+            If SerialPort7.IsOpen Then
+                SerialPort7.Close()
+            End If
+        End Try
+
+        ' Navigate to the next form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        ' Navigate to the previous form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Form5_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        ' Ensure that the serial port is closed when the form is closing
+        If SerialPort7.IsOpen Then
+            SerialPort7.Close()
+        End If
+    End Sub
+
+    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
+        ' This event handler is not utilized in the provided code snippet
+    End Sub
+End Class
+======================================
+form 9 temperature
+==========================================
+Imports System.IO.Ports
+
+Public Class Form9
+    Private readings As New List(Of Double)
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        ' Navigate to the previous form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        Try
+            If Not SerialPort8.IsOpen Then
+                SerialPort8.Open()
+            End If
+
+            Dim totalReadings As Integer = 5 ' Number of readings to consider for the moving average
+
+            ' Read new temperature readings and calculate moving average
+            For i As Integer = 1 To totalReadings
+                Dim temperature As String = SerialPort8.ReadLine()
+
+                ' Convert temperature to a numeric value (assuming it's a number)
+                Dim tempValue As Double
+                If Double.TryParse(temperature, tempValue) Then
+                    readings.Add(tempValue)
+
+                    ' Limit the number of readings to the last 5
+                    If readings.Count > totalReadings Then
+                        readings.RemoveAt(0)
+                    End If
+
+                    ' Calculate the moving average
+                    Dim averageTemperature As Double = readings.Average()
+
+                    TextBox1.Text = averageTemperature.ToString("F2") & " F"
+                    Form14.temperaturedata = averageTemperature.ToString("F2")
+                Else
+                    ' Handle the case when the temperature reading is not a valid number
+                    TextBox1.AppendText("Invalid temperature reading: " & temperature & Environment.NewLine)
+                End If
+            Next
+        Catch ex As Exception
+            ' Handle any exceptions that might occur during reading
+            MessageBox.Show("Error reading data from SerialPort: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            ' Close the serial port after reading values
+            If SerialPort8.IsOpen Then
+                SerialPort8.Close()
+            End If
+        End Try
+
+        ' Navigate to the next form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Form9_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        ' Maximize the form on load
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+
+    Private Sub Form9_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        ' Ensure that the serial port is closed when the form is closing
+        If SerialPort8.IsOpen Then
+            SerialPort8.Close()
+        End If
+    End Sub
+
+    Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs)
+        ' This event handler is not utilized in the provided code snippet
+    End Sub
+
+    Private Sub TextBox1_TextChanged_1(sender As Object, e As EventArgs) Handles TextBox1.TextChanged
+        ' This event handler is not utilized in the provided code snippet
+    End Sub
+End Class
+=============================================
+form 11 SPO2 & heartrate
+==============================================
+
+Imports System.IO.Ports
+
+Public Class Form11
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        ' Navigate to the previous form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        Const numberOfReadings As Integer = 5
+        Dim heartRateSum As Integer = 0
+        Dim spo2Sum As Integer = 0
+        Dim retryCount As Integer = 3 ' Number of retries if reading fails
+
+        For i As Integer = 1 To numberOfReadings
+            If Not SerialPort5.IsOpen Then
+                SerialPort5.Open()
+            End If
+
+            For j As Integer = 1 To retryCount
+                Try
+                    ' Read the data from the SerialPort
+                    Dim data As String = SerialPort5.ReadLine().Trim()
+
+                    ' Assuming data is in the format "heartRate,spo2" (e.g., "80,90")
+                    Dim readings As String() = data.Split(","c)
+
+                    ' Parse the heart rate and spo2 values
+                    Dim heartRateValue As Integer
+                    Dim SPO2Value As Integer
+                    If readings.Length = 2 AndAlso Integer.TryParse(readings(0), heartRateValue) AndAlso Integer.TryParse(readings(1), SPO2Value) Then
+                        ' Update the TextBox controls on the form
+                        Me.Invoke(Sub()
+                                      TextBox1.Text = $"{heartRateValue} bpm"
+                                      TextBox2.Text = $"{SPO2Value}%"
+                                  End Sub)
+
+                        ' Calculate the sum of heart rate and spo2 values for moving average
+                        heartRateSum += heartRateValue
+                        spo2Sum += SPO2Value
+
+                        Exit For ' Exit retry loop if successful reading
+                    End If
+                Catch ex As Exception
+                    ' Log the error, attempt retry if within the retry count
+                    If j = retryCount Then
+                        MessageBox.Show($"Error reading data from SerialPort: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    End If
+                End Try
+
+                ' Add a delay between retries
+                System.Threading.Thread.Sleep(100) ' Adjust the delay as needed
+            Next
+
+            ' Add a delay between readings to avoid overwhelming the serial port
+            System.Threading.Thread.Sleep(100) ' Adjust the delay as needed
+        Next
+
+        ' Calculate the moving average for heart rate and spo2
+        Dim heartRateAverage As Integer = heartRateSum / numberOfReadings
+        Dim spo2Average As Integer = spo2Sum / numberOfReadings
+
+        ' Display the moving average results
+        Me.Invoke(Sub()
+                      TextBox1.AppendText($"Heart Rate : {heartRateAverage}{Environment.NewLine}")
+                      TextBox2.AppendText($"SPO2 : {spo2Average}{Environment.NewLine}")
+
+                      Form14.heartratedata = heartRateAverage.ToString()
+                      Form14.SPO2data = spo2Average.ToString()
+                  End Sub)
+
+        If SerialPort5.IsOpen Then
+            SerialPort5.Close()
+        End If
+
+        ' Navigate to the next form
+        Me.Hide()
+        Dim form3 As New Form3()
+        form3.Show()
+    End Sub
+
+    Private Sub Form11_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        ' Maximize the form on load
+        Me.WindowState = FormWindowState.Maximized
+    End Sub
+
+    Private Sub Form11_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        ' Ensure that the serial port is closed when the form is closing
+        If SerialPort5.IsOpen Then
+            SerialPort5.Close()
+        End If
+    End Sub
+End Class
+================================
+ardiuno Spo2 readings codes 
+================================
+#include <Wire.h>
+#include "MAX30102_PulseOximeter.h"
+
+#define REPORTING_PERIOD_MS 1000
+#define MAX_RETRIES 3
+
+PulseOximeter pox;
+
+void setup() {
+    Serial.begin(9600);
+
+    int retries = 0;
+    while (retries < MAX_RETRIES) {
+        if (pox.begin()) {
+            break;
+        } else {
+            retries++;
+            delay(1000);
+        }
+    }
+
+    pox.setIRLedCurrent(MAX30102_LED_CURR_7_6MA);
+}
+
+void loop() {
+    pox.update();
+    Serial.print(pox.getHeartRate());
+    Serial.print(",");
+    Serial.println(pox.getSpO2());
+    delay(REPORTING_PERIOD_MS);
+}
+========================================
+timeout mechanism if sensors readings fails from ardiuno
+=========================================================
+Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+    Const MAX_RETRIES As Integer = 3
+    Dim retries As Integer = 0
+
+    While retries < MAX_RETRIES
+        Try
+            ' Attempt to read data from the serial port
+            If Not SerialPort5.IsOpen Then
+                SerialPort5.Open()
+            End If
+
+            Dim data As String = SerialPort5.ReadLine().Trim()
+            Dim readings As String() = data.Split(","c)
+
+            If readings.Length = 2 Then
+                ' Update UI with heart rate and SpO2 readings
+                Dim heartRateValue As Integer = Integer.Parse(readings(0))
+                Dim SPO2Value As Integer = Integer.Parse(readings(1))
+                TextBox1.Text = $"{heartRateValue} bpm"
+                TextBox2.Text = $"{SPO2Value}%"
+                Exit While ' Exit loop if data is successfully read
+            End If
+        Catch ex As Exception
+            MessageBox.Show($"Error reading data from SerialPort: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+
+        retries += 1
+        Thread.Sleep(1000) ' Wait before retrying
+    End While
+
+    If retries >= MAX_RETRIES Then
+        MessageBox.Show("Failed to read data from Arduino after maximum retries.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+    End If
+
+    ' Continue with the rest of your application logic
+End Sub
+
+
